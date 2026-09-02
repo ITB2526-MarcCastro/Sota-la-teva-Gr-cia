@@ -1,5 +1,6 @@
 /* ==========================================================================
    VARIABLES — PALETA I FONAMENTS
+   Canvia aquí els colors si vols ajustar la tonalitat nude/carn.
    ========================================================================== */
 :root {
   --bg:          #D9BBA6;   /* fons principal: carn/nude càlid */
@@ -31,7 +32,7 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overflow: hidden; /* cada escena gestiona el seu propi scroll si cal */
 }
 
 body {
@@ -151,6 +152,7 @@ img, video {
   transform: rotate(-0.6deg);
   transition: box-shadow 500ms var(--ease), transform 600ms var(--ease);
 
+  /* textura de paper molt subtil */
   background-image:
     radial-gradient(circle at 20% 30%, rgba(139, 111, 93, 0.05) 0%, transparent 45%),
     radial-gradient(circle at 80% 75%, rgba(139, 111, 93, 0.04) 0%, transparent 40%);
@@ -168,7 +170,6 @@ img, video {
   height: min(78vw, 380px);
   max-height: 56vh;
   object-fit: cover;
-  object-position: center 10%; /* Movem la imatge cap avall per veure millor la part de dalt */
   border-radius: 1px;
   background: var(--paper-edge);
 }
@@ -194,6 +195,7 @@ img, video {
   opacity: 0.85;
 }
 
+/* En mòbil, sense hover: mostrem un indici sempre discret */
 @media (hover: none) {
   .photo__hint {
     opacity: 0.7;
@@ -244,7 +246,6 @@ img, video {
   height: min(44vw, 560px);
   max-height: 62vh;
   object-fit: cover;
-  object-position: center 10%; /* Enquadrament baixat un 10% */
 }
 
 .experience__lyrics {
@@ -399,6 +400,7 @@ img, video {
   }
 }
 
+/* range inputs — estil minimalista comú */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -495,6 +497,7 @@ input[type="range"]::-moz-range-thumb {
   .experience__grid {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr;
+    align-items: stretch;
     padding: 20px 20px 110px;
     gap: 14px;
     height: 100%;
@@ -502,6 +505,7 @@ input[type="range"]::-moz-range-thumb {
 
   .experience__media {
     flex: 0 0 auto;
+    align-self: center;
   }
 
   .photo__frame--main {
@@ -516,8 +520,7 @@ input[type="range"]::-moz-range-thumb {
   }
 
   .experience__lyrics {
-    height: auto;
-    flex: 1 1 auto;
+    height: 100%;
     min-height: 0;
   }
 
@@ -550,6 +553,9 @@ input[type="range"]::-moz-range-thumb {
   }
 }
 
+/* ==========================================================================
+   ACCESSIBILITAT — REDUCED MOTION
+   ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.001ms !important;
