@@ -2,15 +2,20 @@
    CONFIGURACIÓ I DADES DE LA CANÇÓ
    ========================================================================== */
 
+// 1. LLETRA DE LA CANÇÓ AMB TIMESTAMPS (en segons)
 const LYRICS = [
-  { time: 0, text: "Els teus llavis tenen un gust diferent i els" },
-  { time: 5.0, text: "teus ulls brillen entre la gent" },
-  { time: 10.0, text: "En el teu somriure vaig trobar el meu" },
-  { time: 15.0, text: "Sota la teva gràcia em sento en pau" },
-  { time: 20.0, text: "com si el món sencer s'aturés a la teva vora" },
-  { time: 25.0, text: "Cada segon al teu costat és un regal" }
+  { time: 0, text: "" },
+  { time: 8.5, text: "Sota la teva gràcia" },
+  { time: 13.0, text: "em sento en pau," },
+  { time: 17.5, text: "com si el món sencer" },
+  { time: 21.0, text: "s'aturés a la teva vora." },
+  { time: 26.5, text: "Cada segon al teu costat" },
+  { time: 31.0, text: "és un regal que no vull perdre." },
+  { time: 36.5, text: "I si el temps ens ho permet," },
+  { time: 41.0, text: "vull caminar sempre amb tu." }
 ];
 
+// 2. MISSATGE FINAL I PREGUNTA
 const FINAL_MESSAGE = "Andrea, gràcies per fer que cada moment al teu costat sigui especial i ple de llum.";
 const FINAL_QUESTION = "Vols continuar escrivint aquesta història amb mi?";
 
@@ -18,6 +23,7 @@ const FINAL_QUESTION = "Vols continuar escrivint aquesta història amb mi?";
 /* ==========================================================================
    ELEMENTS DEL DOM
    ========================================================================== */
+const app = document.getElementById("app");
 const coverSection = document.getElementById("cover");
 const experienceSection = document.getElementById("experience");
 const finaleSection = document.getElementById("finale");
@@ -69,149 +75,140 @@ function renderLyrics() {
 
 
 /* ==========================================================================
-   FLUX DE L'EXPERIÈNCIA (CANVI DE PESTANYA A L'ACCIÓ DEL CLIC)
+   FLUX DE L'EXPERIÈNCIA (CANVI D'ESCENES)
    ========================================================================== */
+
+// Iniciar experiència en fer clic a la portada
 photoBtn.addEventListener("click", () => {
-  // 1. Canvi visibilitat d'escenes immediat
+  // Mou el vídeo del marc de portada al marc principal de l'experiència
+  mediaFrame.appendChild(video);
+
+  // Canvia l'estat d'amplificació visual si cal
+  video.classList.remove("photo__video");
+  video.classList.add("photo__video--main");
+
+  // Transició d'escenes
   coverSection.classList.add("scene--hidden");
   experienceSection.classList.remove("scene--hidden");
   experienceSection.removeAttribute("aria-hidden");
 
-  // 2. Moure el vídeo si existeix
-  if (mediaFrame && video) {
-    mediaFrame.appendChild(video);
-    video.classList.remove("photo__video");
-    video.classList.add("photo__video--main");
-  }
-
-  // 3. Forçar la lletra a dalt de tot des del principi
-  currentIndex = -1;
-  if (lyricsTrack) {
-    lyricsTrack.style.transform = "translateY(0px)";
-  }
-
-  // 4. Intentar iniciar l'àudio de manera segura
-  if (audio) {
-    audio.play().then(() => {
-      if (iconPlay && iconPause) {
-        iconPlay.hidden = true;
-        iconPause.hidden = false;
-      }
-    }).catch((err) => {
-      console.log("El navegador ha demanat interacció manual per a l'àudio:", err);
-    });
-  }
+  // Activa el so del vídeo si estava en silenci i reprodueix l'àudio
+  audio.play().catch((err) => console.log("Error en reproduir àudio:", err));
 });
 
 
 /* ==========================================================================
-   SINCRONITZACIÓ DE LA LLETRA I SCROLL
+   SINCRONITZACIÓ DE LA LLETRA I REPRODUCCIÓ
    ========================================================================== */
-if (audio) {
-  audio.addEventListener("timeupdate", () => {
-    const time = audio.currentTime;
+audio.addEventListener("timeupdate", () => {
+  const time = audio.currentTime;
 
-    if (audio.duration && progressSlider && currentTimeEl) {
-      progressSlider.value = (time / audio.duration) * 100;
-      currentTimeEl.textContent = formatTime(time);
+  // Actualitza barra de progrés i temps
+  if (audio.duration) {
+    progressSlider.value = (time / audio.duration) * 100;
+    currentTimeEl.textContent = formatTime(time);
+  }
+
+  // Troba la línia activa actual
+  let activeIndex = -1;
+  for (let i = 0; i < LYRICS.length; i++) {
+    if (time >= LYRICS[i].time) {
+      activeIndex = i;
+    } else {
+      break;
     }
+  }
 
-    let activeIndex = -1;
-    for (let i = 0; i < LYRICS.length; i++) {
-      if (time >= LYRICS[i].time) {
-        activeIndex = i;
-      } else {
-        break;
-      }
+  // Canvia la línia activa només quan hi ha un canvi d'índex
+  if (activeIndex !== currentIndex) {
+    currentIndex = activeIndex;
+
+    lyricsNodes.forEach((node, i) => {
+      node.classList.toggle("lyrics__line--active", i === currentIndex);
+      node.classList.toggle("lyrics__line--past", i < currentIndex);
+    });
+
+    // Fa l'scroll suau cap a la línia activa
+    if (currentIndex >= 0 && lyricsNodes[currentIndex]) {
+      const activeNode = lyricsNodes[currentIndex];
+      const offsetTop = activeNode.offsetTop;
+      const containerHeight = lyricsWrap.clientHeight;
+      const nodeHeight = activeNode.clientHeight;
+
+      lyricsTrack.style.transform = `translateY(${
+        containerHeight / 2 - offsetTop - nodeHeight / 2
+      }px)`;
     }
+  }
+});
 
-    if (activeIndex !== currentIndex) {
-      currentIndex = activeIndex;
+// Quan s'acaba la cançó -> Escena final
+audio.addEventListener("ended", () => {
+  experienceSection.classList.add("scene--hidden");
+  finaleSection.classList.remove("scene--hidden");
+  finaleSection.removeAttribute("aria-hidden");
 
-      lyricsNodes.forEach((node, i) => {
-        node.classList.toggle("lyrics__line--active", i === currentIndex);
-        node.classList.toggle("lyrics__line--past", i < currentIndex);
-      });
-
-      // Mantenir a dalt les primeres línies i anar desplaçant progressivament
-      if (currentIndex <= 1) {
-        lyricsTrack.style.transform = "translateY(0px)";
-      } else if (currentIndex > 1 && lyricsNodes[currentIndex]) {
-        const activeNode = lyricsNodes[currentIndex];
-        const offsetTop = activeNode.offsetTop;
-        lyricsTrack.style.transform = `translateY(-${offsetTop - 30}px)`;
-      }
-    }
-  });
-
-  audio.addEventListener("ended", () => {
-    experienceSection.classList.add("scene--hidden");
-    finaleSection.classList.remove("scene--hidden");
-    finaleSection.removeAttribute("aria-hidden");
-
-    if (finalMessageEl) finalMessageEl.textContent = FINAL_MESSAGE;
-    if (finalQuestionEl) finalQuestionEl.textContent = FINAL_QUESTION;
-  });
-
-  audio.addEventListener("loadedmetadata", () => {
-    if (durationEl) durationEl.textContent = formatTime(audio.duration);
-  });
-}
+  finalMessageEl.textContent = FINAL_MESSAGE;
+  finalQuestionEl.textContent = FINAL_QUESTION;
+});
 
 
 /* ==========================================================================
-   CONTROLS DE REPRODUCCIÓ
+   CONTROLS DE REPRODUCCIÓ I VOLUM
    ========================================================================== */
-if (playPauseBtn) {
-  playPauseBtn.addEventListener("click", () => {
-    if (audio.paused) {
-      audio.play();
-      if (video) video.play();
-      iconPlay.hidden = true;
-      iconPause.hidden = false;
-    } else {
-      audio.pause();
-      if (video) video.pause();
-      iconPlay.hidden = false;
-      iconPause.hidden = true;
-    }
-  });
-}
 
-if (progressSlider) {
-  progressSlider.addEventListener("input", () => {
-    if (audio && audio.duration) {
-      const seekTime = (progressSlider.value / 100) * audio.duration;
-      audio.currentTime = seekTime;
-    }
-  });
-}
+// Actualitza la durada total un cop carregat l'àudio
+audio.addEventListener("loadedmetadata", () => {
+  durationEl.textContent = formatTime(audio.duration);
+});
 
-if (muteBtn) {
-  muteBtn.addEventListener("click", () => {
-    if (audio) {
-      audio.muted = !audio.muted;
-      iconVol.hidden = audio.muted;
-      iconMuted.hidden = !audio.muted;
-    }
-  });
-}
+// Play / Pausa
+playPauseBtn.addEventListener("click", () => {
+  if (audio.paused) {
+    audio.play();
+    video.play();
+    iconPlay.hidden = true;
+    iconPause.hidden = false;
+  } else {
+    audio.pause();
+    video.pause();
+    iconPlay.hidden = false;
+    iconPause.hidden = true;
+  }
+});
 
-if (volumeSlider) {
-  volumeSlider.addEventListener("input", () => {
-    if (audio) {
-      audio.volume = volumeSlider.value;
-      audio.muted = volumeSlider.value == 0;
-      iconVol.hidden = audio.muted;
-      iconMuted.hidden = !audio.muted;
-    }
-  });
-}
+// Control del slider de progrés
+progressSlider.addEventListener("input", () => {
+  if (audio.duration) {
+    const seekTime = (progressSlider.value / 100) * audio.duration;
+    audio.currentTime = seekTime;
+  }
+});
 
+// Mute / Unmute
+muteBtn.addEventListener("click", () => {
+  audio.muted = !audio.muted;
+  iconVol.hidden = audio.muted;
+  iconMuted.hidden = !audio.muted;
+});
+
+// Slider de Volum
+volumeSlider.addEventListener("input", () => {
+  audio.volume = volumeSlider.value;
+  audio.muted = volumeSlider.value == 0;
+  iconVol.hidden = audio.muted;
+  iconMuted.hidden = !audio.muted;
+});
+
+
+/* ==========================================================================
+   FUNCIONS AUXILIARS
+   ========================================================================== */
 function formatTime(seconds) {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 }
 
+// Inicialitza la lletra en carregar la pàgina
 renderLyrics();
