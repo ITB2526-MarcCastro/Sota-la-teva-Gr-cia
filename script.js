@@ -183,6 +183,11 @@ function startExperience() {
     experienceScene.removeAttribute('aria-hidden');
     showControls();
     scheduleControlsHide();
+
+    // Ara l'escena ja és visible (display diferent de "none"), així que
+    // podem mesurar la primera línia correctament i posicionar la lletra
+    // abans que comenci a sonar la primera frase.
+    requestAnimationFrame(positionLyricsAtStart);
   }, CONFIG.coverTransitionMs * 0.55);
 
   startLyricsLoop();
@@ -227,18 +232,18 @@ function buildLyricsDOM() {
     lyricsTrack.appendChild(p);
     return p;
   });
+}
 
-  // Posicionem la pista a la PRIMERA línia abans que soni cap paraula.
-  // Sense això, el navegador centra per defecte el bloc sencer de lletra
-  // (CSS top:50%), i durant els primers segons es veuria una línia del
-  // mig o del final de la cançó, revelant contingut que encara no toca.
-  requestAnimationFrame(() => {
-    const firstLine = lyricLineEls[0];
-    if (firstLine) {
-      const offset = firstLine.offsetTop + firstLine.offsetHeight / 2;
-      lyricsTrack.style.transform = `translateY(calc(-1 * ${offset}px))`;
-    }
-  });
+// Posiciona la pista de lletra a la PRIMERA línia abans que soni cap paraula.
+// S'ha de cridar quan l'escena JA és visible (display diferent de "none"),
+// perquè si es calcula abans, offsetTop/offsetHeight retornen 0 i la
+// posició resultant és incorrecta (es veuria contingut equivocat).
+function positionLyricsAtStart() {
+  const firstLine = lyricLineEls[0];
+  if (firstLine) {
+    const offset = firstLine.offsetTop + firstLine.offsetHeight / 2;
+    lyricsTrack.style.transform = `translateY(calc(-1 * ${offset}px))`;
+  }
 }
 
 function updateLyrics() {
@@ -294,6 +299,17 @@ function startLyricsLoop() {
   if (rafId) cancelAnimationFrame(rafId);
   rafId = requestAnimationFrame(lyricsAnimationLoop);
 }
+
+// Si es gira el mòbil (canvi d'orientació) o es redimensiona la finestra,
+// tornem a calcular la posició perquè la lletra no es quedi desalineada.
+window.addEventListener('resize', () => {
+  if (!hasStarted) return;
+  if (currentLineIndex >= 0) {
+    renderCurrentLine();
+  } else {
+    positionLyricsAtStart();
+  }
+});
 
 
 /* ============================================================================
