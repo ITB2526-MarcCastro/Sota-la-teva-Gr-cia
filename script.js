@@ -1,453 +1,215 @@
-/* ============================================================================
-   SCRIPT.JS
-   Estructura del fitxer:
-     1. CONFIGURACIÓ
-     2. LLETRA DE LA CANÇÓ        <- actualitzat amb els tempos de les captures
-     3. MISSATGE FINAL            <- edita aquí el missatge i la pregunta
-     4. REFERÈNCIES AL DOM
-     5. ESTAT
-     6. INICI DE L'EXPERIÈNCIA (clic a la fotografia)
-     7. SINCRONITZACIÓ VÍDEO + ÀUDIO
-     8. LLETRA SINCRONITZADA (requestAnimationFrame)
-     9. CONTROLS PERSONALITZATS
-    10. AUTO-AMAGAR CONTROLS
-    11. FINAL DE LA CANÇÓ
-    12. UTILITATS
-   ============================================================================ */
+/* ==========================================================================
+   CONFIGURACIÓ I DADES DE LA CANÇÓ
+   ========================================================================== */
 
-
-/* ============================================================================
-   1. CONFIGURACIÓ
-   ============================================================================ */
-const CONFIG = {
-  // Durada de la transició portada -> experiència principal
-  coverTransitionMs: 900,
-
-  // Segons abans del final de la cançó en què comença la seqüència final
-  finaleLeadSeconds: 0.4,
-
-  // Mil·lisegons d'inactivitat abans d'amagar els controls
-  controlsHideDelayMs: 2600,
-};
-
-
-/* ============================================================================
-   2. LLETRA DE LA CANÇÓ
-   ========================================================================
-   Timestamps actualitzats segons les captures de pantalla proporcionades.
-   ======================================================================== */
-const lyrics = [
-  // Captura 1 (0:22 - 0:41)
-  { start: 22.0, end: 25.0, text: "Ens vam trobar per amics en comú i" },
-  { start: 25.0, end: 28.0, text: "aquella nit vaig saber qui eres tu" },
-  { start: 28.0, end: 31.0, text: "Parlant fluixet, tan a prop l'un de" },
-  { start: 31.0, end: 34.0, text: "l'altre i sense adonar-me'n, en Cupit va" },
-  { start: 34.0, end: 36.0, text: "flechar-me" },
-  { start: 36.0, end: 38.0, text: "L'endemà a la fira et vaig tornar a" },
-  { start: 38.0, end: 41.0, text: "trobar i entre mirades alguna cosa va" },
-  { start: 41.0, end: 43.0, text: "començar" },
-
-  // Captura 2 (0:43 - 1:01)
-  { start: 43.0, end: 46.0, text: "Cap dels dos volia aquella nit acabar i" },
-  { start: 46.0, end: 50.0, text: "tota la nit només et volia mirar" },
-  { start: 50.0, end: 53.0, text: "I sense avís em vas fer canviar" },
-  { start: 53.0, end: 55.0, text: "Em vas donar la pau que no sabia" },
-  { start: 55.0, end: 57.0, text: "trobar" },
-  { start: 57.0, end: 59.0, text: "A poc a poc ho vaig tenir més" },
-  { start: 59.0, end: 61.0, text: "clar, que és amb tu amb qui em" },
-  { start: 61.0, end: 63.0, text: "vull quedar" },
-
-  // Captura 3 (1:03 - 1:25)
-  { start: 63.0, end: 66.0, text: "No sabràs distingir entre petons i" },
-  { start: 66.0, end: 69.0, text: "paraules si em deixes eternament" },
-  { start: 69.0, end: 71.0, text: "estimar-te" },
-  { start: 71.0, end: 75.0, text: "Em diràs que estic boig per esperar-te," },
-  { start: 75.0, end: 78.0, text: "però deixa'm viure sota la teva gràcia" },
-  { start: 78.0, end: 82.0, text: "Cada instant amb tu a la meva vida" },
-  { start: 82.0, end: 85.0, text: "em fa canviar tota la melodia" },
-  { start: 85.0, end: 87.0, text: "I si apostar per tu és perdre la" },
-
-  // Captura 4 (1:27 - 1:57)
-  { start: 87.0, end: 91.0, text: "partida, jo tornaria a jugar-la cada" },
-  { start: 91.0, end: 96.0, text: "dia" },
-  { start: 96.0, end: 105.0, text: "Els" },
-  { start: 105.0, end: 109.0, text: "teus llavis tenen un gust diferent i els" },
-  { start: 109.0, end: 112.0, text: "teus ulls brillen entre la gent" },
-  { start: 112.0, end: 115.0, text: "En el teu somriure vaig trobar el meu" },
-  { start: 115.0, end: 117.0, text: "fre, quan em mires el temps ja no" },
-  { start: 117.0, end: 118.0, text: "val res" },
-
-  // Captura 5 (1:58 - 2:25)
-  { start: 118.0, end: 125.0, text: "Cada segon al teu costat vola massa pressa" },
-  { start: 125.0, end: 130.0, text: "I la teva calma es va tornar promesa" },
-  { start: 130.0, end: 133.0, text: "No sabràs distingir entre petons i" },
-  { start: 133.0, end: 136.0, text: "paraules si em deixes eternament" },
-  { start: 136.0, end: 138.0, text: "estimar-te" },
-  { start: 138.0, end: 141.0, text: "Em diràs que estic boig per esperar-te," },
-  { start: 141.0, end: 145.0, text: "però deixa'm viure sota la teva gràcia" },
-  { start: 145.0, end: 148.0, text: "Cada instant amb tu a la meva vida" },
-
-  // Captura 6 (2:28 - 2:56)
-  { start: 148.0, end: 152.0, text: "em fa canviar tota la melodia" },
-  { start: 152.0, end: 154.0, text: "I si apostar per tu és perdre la" },
-  { start: 154.0, end: 162.0, text: "partida, jo tornaria a jugar-la cada dia" },
-  { start: 162.0, end: 165.0, text: "A mi que sempre m'agradava accelerar, però" },
-  { start: 165.0, end: 168.0, text: "tenir-te a prop m'ha fet frenar" },
-  { start: 168.0, end: 171.0, text: "Ja no vull córrer si et puc esperar," },
-  { start: 171.0, end: 176.0, text: "si el millor del camí és veure't passar" },
-  { start: 176.0, end: 182.0, text: "I si em preguntes què vull recordar," },
-
-  // Captura 7 (2:56 - 3:30)
-  { start: 182.0, end: 188.0, text: "serà cada vegada que em vas fer volar" },
-  { start: 188.0, end: 195.0, text: "No em penedeixo de res del passat," },
-  { start: 195.0, end: 198.0, text: "repetiria cada pas" },
-  { start: 198.0, end: 201.0, text: "errat" },
-  { start: 201.0, end: 204.0, text: "Només per tenir-te avui al meu" },
-  { start: 204.0, end: 210.0, text: "costat," },
-  { start: 210.0, end: 220.0, text: "al teu costat" }
+// 1. LLETRA DE LA CANÇÓ AMB TIMESTAMPS (en segons)
+// La primera línia està buida a time: 0 perquè no es vegi res durant la intro.
+const LYRICS = [
+  { time: 0, text: "" }, // Intro instrumental (pantalla neta)
+  { time: 8.5, text: "Sota la teva gràcia" },
+  { time: 13.0, text: "em sento en pau," },
+  { time: 17.5, text: "com si el món sencer" },
+  { time: 21.0, text: "s'aturés a la teva vora." },
+  { time: 26.5, text: "Cada segon al teu costat" },
+  { time: 31.0, text: "és un regal que no vull perdre." },
+  { time: 36.5, text: "I si el temps ens ho permet," },
+  { time: 41.0, text: "vull caminar sempre amb tu." }
 ];
 
-
-/* ============================================================================
-   3. MISSATGE FINAL
-   ============================================================================ */
-const finalMessage = "Em deixaries estar sempre al teu costat?";
-const finalQuestion = "Vols ser la meva parella?";
+// 2. MISSATGE FINAL I PREGUNTA
+const FINAL_MESSAGE = "Andrea, gràcies per fer que cada moment al teu costat sigui especial i ple de llum.";
+const FINAL_QUESTION = "Vols continuar escrivint aquesta història amb mi?";
 
 
-/* ============================================================================
-   4. REFERÈNCIES AL DOM
-   ============================================================================ */
-const coverScene = document.getElementById('cover');
-const experienceScene = document.getElementById('experience');
-const finaleScene = document.getElementById('finale');
+/* ==========================================================================
+   ELEMENTS DEL DOM
+   ========================================================================== */
+const app = document.getElementById("app");
+const coverSection = document.getElementById("cover");
+const experienceSection = document.getElementById("experience");
+const finaleSection = document.getElementById("finale");
 
-const photoBtn = document.getElementById('photo');
-const video = document.getElementById('video');
-const mediaFrame = document.getElementById('mediaFrame');
+const photoBtn = document.getElementById("photo");
+const mediaFrame = document.getElementById("mediaFrame");
+const video = document.getElementById("video");
+const audio = document.getElementById("audio");
 
-const audio = document.getElementById('audio');
+const lyricsTrack = document.getElementById("lyricsTrack");
+const lyricsWrap = document.getElementById("lyricsWrap");
 
-const lyricsWrap = document.getElementById('lyricsWrap');
-const lyricsTrack = document.getElementById('lyricsTrack');
+const playPauseBtn = document.getElementById("playPauseBtn");
+const iconPlay = playPauseBtn.querySelector(".icon--play");
+const iconPause = playPauseBtn.querySelector(".icon--pause");
 
-const controls = document.getElementById('controls');
-const playPauseBtn = document.getElementById('playPauseBtn');
-const iconPlay = playPauseBtn.querySelector('.icon--play');
-const iconPause = playPauseBtn.querySelector('.icon--pause');
+const currentTimeEl = document.getElementById("currentTime");
+const durationEl = document.getElementById("duration");
+const progressSlider = document.getElementById("progress");
 
-const progress = document.getElementById('progress');
-const currentTimeEl = document.getElementById('currentTime');
-const durationEl = document.getElementById('duration');
+const muteBtn = document.getElementById("muteBtn");
+const iconVol = muteBtn.querySelector(".icon--vol");
+const iconMuted = muteBtn.querySelector(".icon--muted");
+const volumeSlider = document.getElementById("volume");
 
-const muteBtn = document.getElementById('muteBtn');
-const iconVol = muteBtn.querySelector('.icon--vol');
-const iconMuted = muteBtn.querySelector('.icon--muted');
-const volumeSlider = document.getElementById('volume');
+const finalMessageEl = document.getElementById("finalMessage");
+const finalQuestionEl = document.getElementById("finalQuestion");
 
-const finalMessageEl = document.getElementById('finalMessage');
-const finalQuestionEl = document.getElementById('finalQuestion');
-
-
-/* ============================================================================
-   5. ESTAT
-   ============================================================================ */
-let hasStarted = false;
-let isSeekingByUser = false;
-let lyricLineEls = [];
-let currentLineIndex = -1;
-let rafId = null;
-let controlsHideTimer = null;
-let finaleTriggered = false;
+let lyricsNodes = [];
+let currentIndex = -1;
 
 
-/* ============================================================================
-   6. INICI DE L'EXPERIÈNCIA (clic a la fotografia)
-   ============================================================================ */
-function startExperience() {
-  if (hasStarted) return;
-  hasStarted = true;
+/* ==========================================================================
+   INICIALITZACIÓ DE LA LLETRA
+   ========================================================================== */
+function renderLyrics() {
+  lyricsTrack.innerHTML = "";
+  lyricsNodes = [];
 
-  buildLyricsDOM();
-
-  photoBtn.style.transform = 'scale(1.015)';
-
-  audio.currentTime = 0;
-  audio.play().catch(() => {
-    audio.play();
-  });
-
-  mediaFrame.appendChild(video);
-  video.classList.add('photo__video');
-
-  coverScene.classList.add('is-leaving');
-
-  window.setTimeout(() => {
-    coverScene.setAttribute('aria-hidden', 'true');
-    experienceScene.classList.add('is-active');
-    experienceScene.removeAttribute('aria-hidden');
-    showControls();
-    scheduleControlsHide();
-  }, CONFIG.coverTransitionMs * 0.55);
-
-  startLyricsLoop();
-}
-
-photoBtn.addEventListener('click', startExperience);
-photoBtn.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') {
-    e.preventDefault();
-    startExperience();
-  }
-});
-
-
-/* ============================================================================
-   7. SINCRONITZACIÓ VÍDEO + ÀUDIO
-   ============================================================================ */
-audio.addEventListener('play', () => {
-  if (video.paused) video.play().catch(() => {});
-});
-
-audio.addEventListener('pause', () => {
-  if (!video.paused) video.pause();
-});
-
-audio.addEventListener('seeked', () => {
-  if (audio.currentTime < 0.15) {
-    video.currentTime = 0;
-  }
-});
-
-
-/* ============================================================================
-   8. LLETRA SINCRONITZADA (requestAnimationFrame + audio.currentTime)
-   ============================================================================ */
-function buildLyricsDOM() {
-  lyricsTrack.innerHTML = '';
-  lyricLineEls = lyrics.map((line) => {
-    const p = document.createElement('p');
-    p.className = 'lyrics__line';
+  LYRICS.forEach((line, index) => {
+    const p = document.createElement("p");
+    p.className = "lyrics__line";
     p.textContent = line.text;
+    p.dataset.index = index;
     lyricsTrack.appendChild(p);
-    return p;
+    lyricsNodes.push(p);
   });
 }
 
-function updateLyrics() {
-  const t = audio.currentTime;
 
+/* ==========================================================================
+   FLUX DE L'EXPERIÈNCIA (CANVI D'ESCENES)
+   ========================================================================== */
+
+// Iniciar experiència en fer clic a la portada
+photoBtn.addEventListener("click", () => {
+  // Mou el vídeo del marc de portada al marc principal de l'experiència
+  mediaFrame.appendChild(video);
+
+  // Canvia l'estat d'amplificació visual si cal
+  video.classList.remove("photo__video");
+  video.classList.add("photo__video--main");
+
+  // Transició d'escenes
+  coverSection.classList.add("scene--hidden");
+  experienceSection.classList.remove("scene--hidden");
+  experienceSection.removeAttribute("aria-hidden");
+
+  // Activa el so del vídeo si estava en silenci i reprodueix l'àudio
+  audio.play().catch((err) => console.log("Error en reproduir àudio:", err));
+});
+
+
+/* ==========================================================================
+   SINCRONITZACIÓ DE LA LLETRA I REPRODUCCIÓ
+   ========================================================================== */
+audio.addEventListener("timeupdate", () => {
+  const time = audio.currentTime;
+
+  // Actualitza barra de progrés i temps
+  if (audio.duration) {
+    progressSlider.value = (time / audio.duration) * 100;
+    currentTimeEl.textContent = formatTime(time);
+  }
+
+  // Troba la línia activa actual
   let activeIndex = -1;
-  for (let i = 0; i < lyrics.length; i++) {
-    if (t >= lyrics[i].start && t < lyrics[i].end) {
+  for (let i = 0; i < LYRICS.length; i++) {
+    if (time >= LYRICS[i].time) {
       activeIndex = i;
+    } else {
       break;
     }
   }
 
-  if (activeIndex === -1) {
-    for (let i = lyrics.length - 1; i >= 0; i--) {
-      if (t >= lyrics[i].start) {
-        activeIndex = -2;
-        break;
-      }
+  // Canvia la línia activa només quan hi ha un canvi d'índex
+  if (activeIndex !== currentIndex) {
+    currentIndex = activeIndex;
+
+    lyricsNodes.forEach((node, i) => {
+      node.classList.toggle("lyrics__line--active", i === currentIndex);
+      node.classList.toggle("lyrics__line--past", i < currentIndex);
+    });
+
+    // Fa l'scroll suau cap a la línia activa
+    if (currentIndex >= 0 && lyricsNodes[currentIndex]) {
+      const activeNode = lyricsNodes[currentIndex];
+      const offsetTop = activeNode.offsetTop;
+      const containerHeight = lyricsWrap.clientHeight;
+      const nodeHeight = activeNode.clientHeight;
+
+      lyricsTrack.style.transform = `translateY(${
+        containerHeight / 2 - offsetTop - nodeHeight / 2
+      }px)`;
     }
   }
+});
 
-  if (activeIndex !== currentLineIndex && activeIndex !== -2) {
-    currentLineIndex = activeIndex;
-    renderCurrentLine();
-  }
-}
+// Quan s'acaba la cançó -> Escena final
+audio.addEventListener("ended", () => {
+  experienceSection.classList.add("scene--hidden");
+  finaleSection.classList.remove("scene--hidden");
+  finaleSection.removeAttribute("aria-hidden");
 
-function renderCurrentLine() {
-  lyricLineEls.forEach((el, i) => {
-    el.classList.remove('is-current', 'is-past');
-    if (i === currentLineIndex) {
-      el.classList.add('is-current');
-    } else if (i < currentLineIndex) {
-      el.classList.add('is-past');
-    }
-  });
-
-  if (currentLineIndex >= 0 && lyricLineEls[currentLineIndex]) {
-    const lineEl = lyricLineEls[currentLineIndex];
-    const offset = lineEl.offsetTop + lineEl.offsetHeight / 2;
-    lyricsTrack.style.transform = `translateY(calc(-1 * ${offset}px))`;
-  }
-}
-
-function lyricsAnimationLoop() {
-  updateLyrics();
-  checkFinale();
-  rafId = requestAnimationFrame(lyricsAnimationLoop);
-}
-
-function startLyricsLoop() {
-  if (rafId) cancelAnimationFrame(rafId);
-  rafId = requestAnimationFrame(lyricsAnimationLoop);
-}
+  finalMessageEl.textContent = FINAL_MESSAGE;
+  finalQuestionEl.textContent = FINAL_QUESTION;
+});
 
 
-/* ============================================================================
-   9. CONTROLS PERSONALITZATS
-   ============================================================================ */
-audio.addEventListener('loadedmetadata', () => {
+/* ==========================================================================
+   CONTROLS DE REPRODUCCIÓ I VOLUM
+   ========================================================================== */
+
+// Actualitza la durada total un cop carregat l'àudio
+audio.addEventListener("loadedmetadata", () => {
   durationEl.textContent = formatTime(audio.duration);
 });
 
-audio.addEventListener('timeupdate', () => {
-  if (isSeekingByUser) return;
-  currentTimeEl.textContent = formatTime(audio.currentTime);
-  if (audio.duration) {
-    progress.value = (audio.currentTime / audio.duration) * 100;
-  }
-});
-
-playPauseBtn.addEventListener('click', () => {
+// Play / Pausa
+playPauseBtn.addEventListener("click", () => {
   if (audio.paused) {
     audio.play();
+    video.play();
+    iconPlay.hidden = true;
+    iconPause.hidden = false;
   } else {
     audio.pause();
+    video.pause();
+    iconPlay.hidden = false;
+    iconPause.hidden = true;
   }
 });
 
-audio.addEventListener('play', () => {
-  iconPlay.hidden = true;
-  iconPause.hidden = false;
-  playPauseBtn.setAttribute('aria-label', 'Pausa');
-});
-
-audio.addEventListener('pause', () => {
-  iconPlay.hidden = false;
-  iconPause.hidden = true;
-  playPauseBtn.setAttribute('aria-label', 'Reproduir');
-});
-
-progress.addEventListener('input', () => {
-  isSeekingByUser = true;
-  const pct = Number(progress.value) / 100;
+// Control del slider de progrés
+progressSlider.addEventListener("input", () => {
   if (audio.duration) {
-    currentTimeEl.textContent = formatTime(pct * audio.duration);
+    const seekTime = (progressSlider.value / 100) * audio.duration;
+    audio.currentTime = seekTime;
   }
 });
 
-progress.addEventListener('change', () => {
-  if (audio.duration) {
-    audio.currentTime = (Number(progress.value) / 100) * audio.duration;
-    video.currentTime = audio.currentTime % (video.duration || audio.currentTime || 1);
-  }
-  isSeekingByUser = false;
-});
-
-muteBtn.addEventListener('click', () => {
+// Mute / Unmute
+muteBtn.addEventListener("click", () => {
   audio.muted = !audio.muted;
   iconVol.hidden = audio.muted;
   iconMuted.hidden = !audio.muted;
-  muteBtn.setAttribute('aria-label', audio.muted ? 'Activar so' : 'Silenciar');
 });
 
-volumeSlider.addEventListener('input', () => {
-  audio.volume = Number(volumeSlider.value);
-  if (audio.volume === 0) {
-    audio.muted = true;
-    iconVol.hidden = true;
-    iconMuted.hidden = false;
-  } else if (audio.muted) {
-    audio.muted = false;
-    iconVol.hidden = false;
-    iconMuted.hidden = true;
-  }
+// Slider de Volum
+volumeSlider.addEventListener("input", () => {
+  audio.volume = volumeSlider.value;
+  audio.muted = volumeSlider.value == 0;
+  iconVol.hidden = audio.muted;
+  iconMuted.hidden = !audio.muted;
 });
 
 
-/* ============================================================================
-   10. AUTO-AMAGAR CONTROLS
-   ============================================================================ */
-function showControls() {
-  controls.classList.remove('is-hidden');
-}
-
-function scheduleControlsHide() {
-  window.clearTimeout(controlsHideTimer);
-  controlsHideTimer = window.setTimeout(() => {
-    if (!audio.paused) {
-      controls.classList.add('is-hidden');
-    }
-  }, CONFIG.controlsHideDelayMs);
-}
-
-function handleActivity() {
-  if (!experienceScene.classList.contains('is-active')) return;
-  showControls();
-  scheduleControlsHide();
-}
-
-experienceScene.addEventListener('mousemove', handleActivity);
-experienceScene.addEventListener('touchstart', handleActivity, { passive: true });
-experienceScene.addEventListener('click', handleActivity);
-controls.addEventListener('mouseenter', () => window.clearTimeout(controlsHideTimer));
-controls.addEventListener('mouseleave', scheduleControlsHide);
-
-
-/* ============================================================================
-   11. FINAL DE LA CANÇÓ
-   ============================================================================ */
-function checkFinale() {
-  if (finaleTriggered) return;
-  if (!audio.duration) return;
-  if (audio.currentTime >= audio.duration - CONFIG.finaleLeadSeconds) {
-    finaleTriggered = true;
-    runFinale();
-  }
-}
-
-audio.addEventListener('ended', () => {
-  if (!finaleTriggered) {
-    finaleTriggered = true;
-    runFinale();
-  }
-});
-
-function runFinale() {
-  finalMessageEl.textContent = finalMessage;
-  finalQuestionEl.textContent = finalQuestion;
-
-  lyricsWrap.style.transition = 'opacity 1200ms ease';
-  lyricsWrap.style.opacity = '0';
-
-  controls.classList.add('is-hidden');
-
-  window.setTimeout(() => {
-    experienceScene.style.transition = 'opacity 1200ms ease';
-    experienceScene.style.opacity = '0';
-
-    window.setTimeout(() => {
-      experienceScene.classList.remove('is-active');
-      experienceScene.setAttribute('aria-hidden', 'true');
-
-      finaleScene.classList.add('is-active');
-      finaleScene.removeAttribute('aria-hidden');
-
-      window.setTimeout(() => {
-        finalMessageEl.classList.add('is-visible');
-      }, 300);
-
-      window.setTimeout(() => {
-        finalQuestionEl.classList.add('is-visible');
-      }, 1800);
-
-    }, 1200);
-  }, 2600);
-}
-
-
-/* ============================================================================
-   12. UTILITATS
-   ============================================================================ */
+/* ==========================================================================
+   FUNCIONS AUXILIARS
+   ========================================================================== */
 function formatTime(seconds) {
-  if (!isFinite(seconds) || seconds < 0) return '0:00';
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 }
+
+// Inicialitza la lletra en carregar la pàgina
+renderLyrics();
