@@ -1,0 +1,559 @@
+/* ==========================================================================
+   VARIABLES — PALETA I FONAMENTS
+   ========================================================================== */
+:root {
+  --bg:          #D9BBA6;   /* fons principal: carn/nude càlid */
+  --bg-deep:     #C7A88F;   /* variant una mica més fosca, pel degradat subtil del fons */
+  --paper:       #FAF4EC;   /* blanc trencat / crema, el "paper" de la fotografia */
+  --paper-edge:  #F1E7D8;   /* vora del paper, lleugerament més fosca */
+  --ink:         #3B2A22;   /* text principal: marró molt fosc */
+  --ink-soft:    #8A6F5D;   /* text secundari: marró suau */
+  --accent:      #B98865;   /* accent: nude més fosc */
+  --accent-deep: #8C5E3F;
+
+  --shadow-soft: 0 30px 60px -20px rgba(59, 42, 34, 0.35);
+  --shadow-tight: 0 10px 24px -12px rgba(59, 42, 34, 0.4);
+
+  --font-serif: 'Iowan Old Style', 'Palatino Linotype', 'Georgia', 'PT Serif', serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ==========================================================================
+   RESET BÀSIC
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  background:
+    radial-gradient(120% 140% at 50% 0%, var(--bg) 0%, var(--bg-deep) 100%);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent-deep);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+img, video {
+  display: block;
+  max-width: 100%;
+}
+
+/* ==========================================================================
+   CONTENIDOR PRINCIPAL
+   ========================================================================== */
+#app {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ==========================================================================
+   ESCENA 1 — PORTADA
+   ========================================================================== */
+.scene--cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  opacity: 1;
+  transition: opacity 900ms var(--ease), transform 900ms var(--ease);
+}
+
+.scene--cover.is-leaving {
+  opacity: 0;
+  transform: scale(1.04);
+  pointer-events: none;
+}
+
+.cover__stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+
+.cover__whisper {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  opacity: 0.55;
+  animation: whisperFade 3.6s ease-in-out infinite;
+}
+
+@keyframes whisperFade {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
+/* ==========================================================================
+   LA "FOTOGRAFIA" — VÍDEO COM SI FOS PAPER FOTOGRÀFIC
+   ========================================================================== */
+.photo {
+  position: relative;
+  display: block;
+  cursor: pointer;
+  transition: transform 500ms var(--ease);
+}
+
+.photo:hover {
+  transform: translateY(-4px) rotate(0deg);
+}
+
+.photo:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+.photo__frame {
+  position: relative;
+  display: block;
+  background: var(--paper);
+  padding: 18px 18px 46px 18px;
+  border-radius: 3px;
+  box-shadow:
+    var(--shadow-soft),
+    0 2px 4px rgba(59, 42, 34, 0.15);
+  transform: rotate(-0.6deg);
+  transition: box-shadow 500ms var(--ease), transform 600ms var(--ease);
+
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(139, 111, 93, 0.05) 0%, transparent 45%),
+    radial-gradient(circle at 80% 75%, rgba(139, 111, 93, 0.04) 0%, transparent 40%);
+}
+
+.photo:hover .photo__frame {
+  transform: rotate(0deg);
+  box-shadow:
+    0 40px 70px -18px rgba(59, 42, 34, 0.42),
+    0 2px 4px rgba(59, 42, 34, 0.15);
+}
+
+.photo__video {
+  width: min(78vw, 380px);
+  height: min(78vw, 380px);
+  max-height: 56vh;
+  object-fit: cover;
+  object-position: center 10%; /* Movem la imatge cap avall per veure millor la part de dalt */
+  border-radius: 1px;
+  background: var(--paper-edge);
+}
+
+.photo__hint {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink-soft);
+  opacity: 0;
+  letter-spacing: 0.01em;
+  transition: opacity 450ms ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.photo:hover .photo__hint,
+.photo:focus-visible .photo__hint {
+  opacity: 0.85;
+}
+
+@media (hover: none) {
+  .photo__hint {
+    opacity: 0.7;
+  }
+}
+
+/* ==========================================================================
+   ESCENA 2 — EXPERIÈNCIA PRINCIPAL
+   ========================================================================== */
+.scene--experience {
+  display: none;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 900ms var(--ease);
+}
+
+.scene--experience.is-active {
+  display: block;
+  opacity: 1;
+}
+
+.experience__grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  align-items: center;
+  gap: clamp(24px, 5vw, 72px);
+  width: 100%;
+  height: 100%;
+  padding: clamp(24px, 6vh, 64px) clamp(24px, 6vw, 96px) 96px;
+}
+
+.experience__media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.photo__frame--main {
+  padding: 14px 14px 34px 14px;
+  transform: rotate(-0.8deg);
+  animation: none;
+}
+
+.photo__frame--main .photo__video,
+.photo__frame--main video {
+  width: min(34vw, 460px);
+  height: min(44vw, 560px);
+  max-height: 62vh;
+  object-fit: cover;
+  object-position: center 10%; /* Enquadrament baixat un 10% */
+}
+
+.experience__lyrics {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 100%;
+}
+
+/* ==========================================================================
+   LLETRA SINCRONITZADA
+   ========================================================================== */
+.lyrics {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  height: min(60vh, 480px);
+  overflow: hidden;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 18%,
+    black 82%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 18%,
+    black 82%,
+    transparent 100%
+  );
+}
+
+.lyrics__track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 650ms var(--ease);
+}
+
+.lyrics__line {
+  font-family: var(--font-serif);
+  font-size: clamp(19px, 2.6vw, 30px);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  opacity: 0.35;
+  padding: 10px 0;
+  transition: opacity 550ms var(--ease), color 550ms var(--ease), transform 550ms var(--ease);
+  transform: scale(0.97);
+}
+
+.lyrics__line.is-current {
+  color: var(--ink);
+  opacity: 1;
+  transform: scale(1);
+}
+
+.lyrics__line.is-past {
+  opacity: 0.28;
+}
+
+/* ==========================================================================
+   CONTROLS D'ÀUDIO
+   ========================================================================== */
+.controls {
+  position: absolute;
+  left: 50%;
+  bottom: 28px;
+  transform: translate(-50%, 0);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px;
+  background: rgba(250, 244, 236, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 999px;
+  box-shadow: var(--shadow-tight);
+  transition: opacity 500ms var(--ease), transform 500ms var(--ease);
+  z-index: 5;
+  max-width: min(92vw, 460px);
+}
+
+.controls.is-hidden {
+  opacity: 0;
+  transform: translate(-50%, 14px);
+  pointer-events: none;
+}
+
+.controls__play {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--accent-deep);
+  color: var(--paper);
+  flex: 0 0 auto;
+}
+
+.controls__play .icon {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+}
+
+.controls__time {
+  font-size: 11px;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+  min-width: 30px;
+  text-align: center;
+}
+
+.controls__progress {
+  flex: 1 1 auto;
+  min-width: 60px;
+}
+
+.controls__volume {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  color: var(--accent-deep);
+  flex: 0 0 auto;
+}
+
+.controls__volume .icon {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: none;
+}
+.controls__volume .icon path[fill] { fill: currentColor; }
+
+.controls__volume-slider {
+  width: 60px;
+  flex: 0 0 auto;
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .controls__volume-slider {
+    display: block;
+  }
+}
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  background: rgba(59, 42, 34, 0.18);
+  border-radius: 999px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--accent-deep);
+  cursor: pointer;
+  transition: transform 200ms ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-deep);
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   ESCENA 3 — FINAL
+   ========================================================================== */
+.scene--finale {
+  display: none;
+  z-index: 4;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  background: radial-gradient(120% 140% at 50% 50%, var(--bg) 0%, var(--bg-deep) 100%);
+  transition: opacity 1400ms var(--ease);
+}
+
+.scene--finale.is-active {
+  display: flex;
+  opacity: 1;
+}
+
+.finale__content {
+  max-width: 560px;
+  padding: 0 32px;
+  text-align: center;
+}
+
+.finale__message {
+  font-family: var(--font-serif);
+  font-size: clamp(22px, 3.4vw, 34px);
+  line-height: 1.5;
+  color: var(--ink);
+  margin: 0 0 28px 0;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 1200ms var(--ease), transform 1200ms var(--ease);
+}
+
+.finale__message.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.finale__question {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: clamp(18px, 2.6vw, 26px);
+  color: var(--accent-deep);
+  margin: 0;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 1200ms var(--ease), transform 1200ms var(--ease);
+}
+
+.finale__question.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   RESPONSIVE — MÒBIL
+   ========================================================================== */
+@media (max-width: 860px) {
+  .experience__grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+    padding: 20px 20px 110px;
+    gap: 14px;
+    height: 100%;
+  }
+
+  .experience__media {
+    flex: 0 0 auto;
+  }
+
+  .photo__frame--main {
+    padding: 10px 10px 26px 10px;
+  }
+
+  .photo__frame--main .photo__video,
+  .photo__frame--main video {
+    width: min(58vw, 300px);
+    height: min(58vw, 300px);
+    max-height: 34vh;
+  }
+
+  .experience__lyrics {
+    height: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .lyrics {
+    height: 100%;
+    max-width: 100%;
+  }
+
+  .lyrics__line {
+    font-size: 18px;
+    text-align: center;
+    padding: 8px 6px;
+  }
+
+  .controls {
+    bottom: 16px;
+    padding: 8px 14px;
+    gap: 10px;
+  }
+
+  .controls__volume-slider {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .photo__video {
+    width: min(72vw, 300px);
+    height: min(72vw, 300px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
