@@ -1,215 +1,312 @@
 /* ==========================================================================
-   CONFIGURACIÓ I DADES DE LA CANÇÓ
+   RESET I VARIABLES GENERALS
    ========================================================================== */
-
-// 1. LLETRA DE LA CANÇÓ AMB TIMESTAMPS (en segons)
-// La primera línia està buida a time: 0 perquè no es vegi res durant la intro.
-const LYRICS = [
-  { time: 0, text: "" }, // Intro instrumental (pantalla neta)
-  { time: 8.5, text: "Sota la teva gràcia" },
-  { time: 13.0, text: "em sento en pau," },
-  { time: 17.5, text: "com si el món sencer" },
-  { time: 21.0, text: "s'aturés a la teva vora." },
-  { time: 26.5, text: "Cada segon al teu costat" },
-  { time: 31.0, text: "és un regal que no vull perdre." },
-  { time: 36.5, text: "I si el temps ens ho permet," },
-  { time: 41.0, text: "vull caminar sempre amb tu." }
-];
-
-// 2. MISSATGE FINAL I PREGUNTA
-const FINAL_MESSAGE = "Andrea, gràcies per fer que cada moment al teu costat sigui especial i ple de llum.";
-const FINAL_QUESTION = "Vols continuar escrivint aquesta història amb mi?";
-
-
-/* ==========================================================================
-   ELEMENTS DEL DOM
-   ========================================================================== */
-const app = document.getElementById("app");
-const coverSection = document.getElementById("cover");
-const experienceSection = document.getElementById("experience");
-const finaleSection = document.getElementById("finale");
-
-const photoBtn = document.getElementById("photo");
-const mediaFrame = document.getElementById("mediaFrame");
-const video = document.getElementById("video");
-const audio = document.getElementById("audio");
-
-const lyricsTrack = document.getElementById("lyricsTrack");
-const lyricsWrap = document.getElementById("lyricsWrap");
-
-const playPauseBtn = document.getElementById("playPauseBtn");
-const iconPlay = playPauseBtn.querySelector(".icon--play");
-const iconPause = playPauseBtn.querySelector(".icon--pause");
-
-const currentTimeEl = document.getElementById("currentTime");
-const durationEl = document.getElementById("duration");
-const progressSlider = document.getElementById("progress");
-
-const muteBtn = document.getElementById("muteBtn");
-const iconVol = muteBtn.querySelector(".icon--vol");
-const iconMuted = muteBtn.querySelector(".icon--muted");
-const volumeSlider = document.getElementById("volume");
-
-const finalMessageEl = document.getElementById("finalMessage");
-const finalQuestionEl = document.getElementById("finalQuestion");
-
-let lyricsNodes = [];
-let currentIndex = -1;
-
-
-/* ==========================================================================
-   INICIALITZACIÓ DE LA LLETRA
-   ========================================================================== */
-function renderLyrics() {
-  lyricsTrack.innerHTML = "";
-  lyricsNodes = [];
-
-  LYRICS.forEach((line, index) => {
-    const p = document.createElement("p");
-    p.className = "lyrics__line";
-    p.textContent = line.text;
-    p.dataset.index = index;
-    lyricsTrack.appendChild(p);
-    lyricsNodes.push(p);
-  });
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-
-/* ==========================================================================
-   FLUX DE L'EXPERIÈNCIA (CANVI D'ESCENES)
-   ========================================================================== */
-
-// Iniciar experiència en fer clic a la portada
-photoBtn.addEventListener("click", () => {
-  // Mou el vídeo del marc de portada al marc principal de l'experiència
-  mediaFrame.appendChild(video);
-
-  // Canvia l'estat d'amplificació visual si cal
-  video.classList.remove("photo__video");
-  video.classList.add("photo__video--main");
-
-  // Transició d'escenes
-  coverSection.classList.add("scene--hidden");
-  experienceSection.classList.remove("scene--hidden");
-  experienceSection.removeAttribute("aria-hidden");
-
-  // Activa el so del vídeo si estava en silenci i reprodueix l'àudio
-  audio.play().catch((err) => console.log("Error en reproduir àudio:", err));
-});
-
-
-/* ==========================================================================
-   SINCRONITZACIÓ DE LA LLETRA I REPRODUCCIÓ
-   ========================================================================== */
-audio.addEventListener("timeupdate", () => {
-  const time = audio.currentTime;
-
-  // Actualitza barra de progrés i temps
-  if (audio.duration) {
-    progressSlider.value = (time / audio.duration) * 100;
-    currentTimeEl.textContent = formatTime(time);
-  }
-
-  // Troba la línia activa actual
-  let activeIndex = -1;
-  for (let i = 0; i < LYRICS.length; i++) {
-    if (time >= LYRICS[i].time) {
-      activeIndex = i;
-    } else {
-      break;
-    }
-  }
-
-  // Canvia la línia activa només quan hi ha un canvi d'índex
-  if (activeIndex !== currentIndex) {
-    currentIndex = activeIndex;
-
-    lyricsNodes.forEach((node, i) => {
-      node.classList.toggle("lyrics__line--active", i === currentIndex);
-      node.classList.toggle("lyrics__line--past", i < currentIndex);
-    });
-
-    // Fa l'scroll suau cap a la línia activa
-    if (currentIndex >= 0 && lyricsNodes[currentIndex]) {
-      const activeNode = lyricsNodes[currentIndex];
-      const offsetTop = activeNode.offsetTop;
-      const containerHeight = lyricsWrap.clientHeight;
-      const nodeHeight = activeNode.clientHeight;
-
-      lyricsTrack.style.transform = `translateY(${
-        containerHeight / 2 - offsetTop - nodeHeight / 2
-      }px)`;
-    }
-  }
-});
-
-// Quan s'acaba la cançó -> Escena final
-audio.addEventListener("ended", () => {
-  experienceSection.classList.add("scene--hidden");
-  finaleSection.classList.remove("scene--hidden");
-  finaleSection.removeAttribute("aria-hidden");
-
-  finalMessageEl.textContent = FINAL_MESSAGE;
-  finalQuestionEl.textContent = FINAL_QUESTION;
-});
-
-
-/* ==========================================================================
-   CONTROLS DE REPRODUCCIÓ I VOLUM
-   ========================================================================== */
-
-// Actualitza la durada total un cop carregat l'àudio
-audio.addEventListener("loadedmetadata", () => {
-  durationEl.textContent = formatTime(audio.duration);
-});
-
-// Play / Pausa
-playPauseBtn.addEventListener("click", () => {
-  if (audio.paused) {
-    audio.play();
-    video.play();
-    iconPlay.hidden = true;
-    iconPause.hidden = false;
-  } else {
-    audio.pause();
-    video.pause();
-    iconPlay.hidden = false;
-    iconPause.hidden = true;
-  }
-});
-
-// Control del slider de progrés
-progressSlider.addEventListener("input", () => {
-  if (audio.duration) {
-    const seekTime = (progressSlider.value / 100) * audio.duration;
-    audio.currentTime = seekTime;
-  }
-});
-
-// Mute / Unmute
-muteBtn.addEventListener("click", () => {
-  audio.muted = !audio.muted;
-  iconVol.hidden = audio.muted;
-  iconMuted.hidden = !audio.muted;
-});
-
-// Slider de Volum
-volumeSlider.addEventListener("input", () => {
-  audio.volume = volumeSlider.value;
-  audio.muted = volumeSlider.value == 0;
-  iconVol.hidden = audio.muted;
-  iconMuted.hidden = !audio.muted;
-});
-
-
-/* ==========================================================================
-   FUNCIONS AUXILIARS
-   ========================================================================== */
-function formatTime(seconds) {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+:root {
+  --bg-color: #d8c2b0;
+  --text-primary: #8c6d58;
+  --text-active: #ffffff;
+  --accent-color: #a67c65;
+  --frame-bg: #ffffff;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  --font-family: 'serif', system-ui, -apple-system, sans-serif;
 }
 
-// Inicialitza la lletra en carregar la pàgina
-renderLyrics();
+body {
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+}
+
+main {
+  width: 100%;
+  max-width: 1200px;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  padding: 20px;
+}
+
+/* ==========================================================================
+   ESCENES (TRANSICIONS)
+   ========================================================================== */
+.scene {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+
+.scene--hidden {
+  opacity: 0;
+  visibility: hidden;
+  position: absolute;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   PORTADA (ESCENA 1)
+   ========================================================================== */
+.scene--cover {
+  flex-direction: column;
+}
+
+.cover__stage {
+  text-align: center;
+}
+
+.photo {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.photo:hover {
+  transform: scale(1.02);
+}
+
+.photo__frame {
+  display: inline-block;
+  background: var(--frame-bg);
+  padding: 16px 16px 60px 16px;
+  box-shadow: var(--shadow);
+  border-radius: 4px;
+  position: relative;
+}
+
+.photo__video {
+  width: 300px;
+  height: 380px;
+  object-fit: cover;
+  object-position: 50% 10%;
+  border-radius: 2px;
+  display: block;
+}
+
+.photo__hint {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  font-style: italic;
+  pointer-events: none;
+}
+
+.cover__whisper {
+  margin-top: 15px;
+  font-size: 0.9rem;
+  opacity: 0.7;
+  letter-spacing: 1px;
+}
+
+/* ==========================================================================
+   EXPERIÈNCIA PRINCIPAL (ESCENA 2)
+   ========================================================================== */
+.scene--experience {
+  flex-direction: column;
+  width: 100%;
+}
+
+.experience__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  width: 100%;
+  max-width: 1000px;
+  margin-bottom: 40px;
+}
+
+.experience__media {
+  display: flex;
+  justify-content: center;
+}
+
+.photo__frame--main {
+  padding: 12px 12px 45px 12px;
+}
+
+.photo__video--main {
+  width: 320px;
+  height: 400px;
+  object-fit: cover;
+  object-position: 50% 10%;
+}
+
+/* ==========================================================================
+   LLETRA AMB AMAGAT TOTAL PER DEFECTE
+   ========================================================================== */
+.experience__lyrics {
+  height: 350px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.lyrics {
+  width: 100%;
+  text-align: center;
+  position: relative;
+}
+
+.lyrics__track {
+  transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* ❌ AMAGAT PER DEFECTE: La lletra no es veu fins que s'activa */
+.lyrics__line {
+  font-size: 1.4rem;
+  line-height: 1.8;
+  margin: 15px 0;
+  color: var(--text-primary);
+  opacity: 0; /* Totalment invisible */
+  visibility: hidden;
+  transform: translateY(15px);
+  transition: opacity 0.6s ease, transform 0.6s ease, color 0.6s ease, visibility 0.6s ease;
+}
+
+/* ✅ LÍNIA ACTIVA: Apareix quan la cançó arriba al segon exacte */
+.lyrics__line--active {
+  opacity: 1;
+  visibility: visible;
+  color: var(--text-active);
+  font-size: 1.6rem;
+  font-weight: bold;
+  transform: translateY(0);
+}
+
+/* 📜 LÍNIES PASSADES: Queden lleugerament en segon pla */
+.lyrics__line--past {
+  opacity: 0.35;
+  visibility: visible;
+  transform: translateY(-10px);
+}
+
+/* ==========================================================================
+   CONTROLS D'ÀUDIO
+   ========================================================================== */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: rgba(255, 255, 255, 0.4);
+  padding: 10px 24px;
+  border-radius: 30px;
+  backdrop-filter: blur(5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.controls__play,
+.controls__volume {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  width: 22px;
+  height: 22px;
+  fill: currentColor;
+}
+
+.controls__time {
+  font-size: 0.85rem;
+  min-width: 35px;
+}
+
+.controls__progress,
+.controls__volume-slider {
+  accent-color: var(--accent-color);
+  cursor: pointer;
+}
+
+.controls__progress {
+  width: 200px;
+}
+
+.controls__volume-slider {
+  width: 70px;
+}
+
+/* ==========================================================================
+   PANTALLA FINAL (ESCENA 3)
+   ========================================================================== */
+.scene--finale {
+  text-align: center;
+  max-width: 600px;
+}
+
+.finale__content {
+  background: rgba(255, 255, 255, 0.5);
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+}
+
+.finale__message {
+  font-size: 1.3rem;
+  line-height: 1.6;
+  margin-bottom: 25px;
+}
+
+.finale__question {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--accent-color);
+}
+
+/* ==========================================================================
+   RESPONSIVE (MÒBILS)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .experience__grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .photo__video--main {
+    width: 240px;
+    height: 300px;
+  }
+
+  .experience__lyrics {
+    height: 250px;
+  }
+
+  .lyrics__line {
+    font-size: 1.1rem;
+  }
+
+  .lyrics__line--active {
+    font-size: 1.3rem;
+  }
+
+  .controls__progress {
+    width: 100px;
+  }
+}
