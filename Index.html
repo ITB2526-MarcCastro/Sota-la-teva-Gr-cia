@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Per a tu</title>
+
+  <!--
+    ========================================
+    ON CANVIAR CADA COSA (resum ràpid)
+    ========================================
+    1. El vídeo:            assets/video.mp4
+    2. La cançó:             .mp3
+    3. La lletra + timestamps: dins de script.js, secció "LLETRA DE LA CANÇÓ"
+    4. El missatge final:    dins de script.js, secció "MISSATGE FINAL"
+    5. La pregunta final:    dins de script.js, secció "MISSATGE FINAL"
+    Més detalls a cada secció del codi.
+  -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============================================================
+       CONTENIDOR PRINCIPAL
+       Conté totes les "escenes" de l'experiència: portada,
+       experiència principal i pantalla final. Es mostren/amaguen
+       amb classes CSS controlades des de script.js.
+  ============================================================ -->
+  <main id="app">
+
+    <!-- ==========================================================
+         ESCENA 1 — PORTADA
+         El vídeo és alhora la portada i el botó per començar.
+    ========================================================== -->
+    <section id="cover" class="scene scene--cover" aria-label="Portada">
+      <div class="cover__stage">
+
+        <button
+          id="photo"
+          class="photo"
+          type="button"
+          aria-label="Fes clic a la fotografia per escoltar la cançó"
+        >
+          <span class="photo__frame">
+            <video
+              id="video"
+              class="photo__video"
+              src="1000453710.mp4"
+              autoplay
+              muted
+              loop
+              playsinline
+              preload="auto"
+              aria-hidden="true"
+            ></video>
+          </span>
+          <span class="photo__hint" aria-hidden="true">Escolta-la</span>
+        </button>
+
+        <p class="cover__whisper">fes-hi clic</p>
+      </div>
+    </section>
+
+    <!-- ==========================================================
+         ESCENA 2 — EXPERIÈNCIA PRINCIPAL
+         Vídeo a l'esquerra (desktop) / a dalt (mòbil),
+         lletra sincronitzada a la dreta / a sota.
+    ========================================================== -->
+    <section id="experience" class="scene scene--experience" aria-hidden="true">
+      <div class="experience__grid">
+
+        <div class="experience__media">
+          <span class="photo__frame photo__frame--main" id="mediaFrame">
+            <!-- El mateix <video> es mou aquí via JS: mai es recrea l'element -->
+          </span>
+        </div>
+
+        <div class="experience__lyrics">
+          <div id="lyricsWrap" class="lyrics" aria-live="polite">
+            <div id="lyricsTrack" class="lyrics__track"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ========================================================
+           CONTROLS D'ÀUDIO PERSONALITZATS
+      ======================================================== -->
+      <div id="controls" class="controls" role="group" aria-label="Controls de reproducció">
+        <button id="playPauseBtn" class="controls__play" type="button" aria-label="Pausa">
+          <svg class="icon icon--pause" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="6" y="5" width="4" height="14" rx="1"></rect>
+            <rect x="14" y="5" width="4" height="14" rx="1"></rect>
+          </svg>
+          <svg class="icon icon--play" viewBox="0 0 24 24" aria-hidden="true" hidden>
+            <path d="M7 4.5v15l13-7.5z"></path>
+          </svg>
+        </button>
+
+        <span id="currentTime" class="controls__time">0:00</span>
+
+        <input
+          id="progress"
+          class="controls__progress"
+          type="range"
+          min="0"
+          max="100"
+          step="0.1"
+          value="0"
+          aria-label="Progrés de la cançó"
+        />
+
+        <span id="duration" class="controls__time">0:00</span>
+
+        <button id="muteBtn" class="controls__volume" type="button" aria-label="Silenciar">
+          <svg class="icon icon--vol" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9v6h4l5 5V4L8 9H4z"></path>
+            <path d="M16.5 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+          </svg>
+          <svg class="icon icon--muted" viewBox="0 0 24 24" aria-hidden="true" hidden>
+            <path d="M4 9v6h4l5 5V4L8 9H4z"></path>
+            <line x1="16" y1="9" x2="21" y2="14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line>
+            <line x1="21" y1="9" x2="16" y2="14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line>
+          </svg>
+        </button>
+
+        <input
+          id="volume"
+          class="controls__volume-slider"
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value="1"
+          aria-label="Volum"
+        />
+      </div>
+
+      <audio id="audio" src="Canço.mp3" preload="auto"></audio>
+    </section>
+
+    <!-- ==========================================================
+         ESCENA 3 — FINAL
+    ========================================================== -->
+    <section id="finale" class="scene scene--finale" aria-hidden="true">
+      <div class="finale__content">
+        <p id="finalMessage" class="finale__message"></p>
+        <p id="finalQuestion" class="finale__question"></p>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
