@@ -227,6 +227,18 @@ function buildLyricsDOM() {
     lyricsTrack.appendChild(p);
     return p;
   });
+
+  // Posicionem la pista a la PRIMERA línia abans que soni cap paraula.
+  // Sense això, el navegador centra per defecte el bloc sencer de lletra
+  // (CSS top:50%), i durant els primers segons es veuria una línia del
+  // mig o del final de la cançó, revelant contingut que encara no toca.
+  requestAnimationFrame(() => {
+    const firstLine = lyricLineEls[0];
+    if (firstLine) {
+      const offset = firstLine.offsetTop + firstLine.offsetHeight / 2;
+      lyricsTrack.style.transform = `translateY(calc(-1 * ${offset}px))`;
+    }
+  });
 }
 
 function updateLyrics() {
